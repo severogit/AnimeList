@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOptions,
+  ListboxOption,
+} from "@headlessui/react";
 import api from "../services/api";
 
 interface Anime {
@@ -8,6 +14,8 @@ interface Anime {
   status: string;
   imageUrl: string;
 }
+
+const statuses = ["Assistindo", "Concluído", "Dropado", "Planejo ver"];
 
 export default function MyList() {
   const [animes, setAnimes] = useState<Anime[]>([]);
@@ -47,9 +55,9 @@ export default function MyList() {
         const anime = data.data[0];
         return {
           malId: Number(anime.mal_id),
-          title: anime.title, // título completo
-          url: anime.url, // link para MAL
-          imageUrl: anime.images.jpg.image_url, // imagem
+          title: anime.title, 
+          url: anime.url, 
+          imageUrl: anime.images.jpg.image_url, 
         };
       }
       return null;
@@ -105,43 +113,73 @@ export default function MyList() {
   };
 
   return (
-    <div>
-      <h1>Minha Lista de Animes</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        Minha Lista de Animes
+      </h1>
 
-      <div>
+      <div className="flex gap-2 mb-6">
         <input
           placeholder="Nome do anime"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
+          className="border border-gray-300 rounded-md px-3 py-2 flex-1"
         />
-        <button onClick={handleAdd}>Adicionar</button>
+        <button className="bg-buttonBlue text-white px-4 py-2 rounded-md hover:bg-hoverBlue" onClick={handleAdd}>
+          Adicionar
+        </button>
       </div>
 
       {loading ? (
         <p>Carregando...</p>
       ) : (
-        <ul className="flex align-center justify-center">
+        <ul className="flex flex-wrap gap-6 justify-center">
           {animes.map((anime) => (
             <li
               key={anime._id}
-              className="flex items-center justify-center flex-col gap-2 ml-6"
+              className="flex flex-col items-center gap-2 bg-lightGray p-4 rounded-lg shadow-md w-40"
             >
-              <img src={anime.imageUrl} alt={anime.title} className="w-40 h-56 object-cover rounded-md"/>
-              <div>
-                <strong className="truncate w-20 block text-center ml-2" title={anime.title}>{anime.title}</strong>
-                <select
+              <img
+                src={anime.imageUrl}
+                alt={anime.title}
+                className="w-36 h-48 object-cover rounded-md"
+              />
+              <strong
+                className="truncate w-full text-center"
+                title={anime.title}
+              >
+                {anime.title}
+              </strong>
+
+              <div className="relative w-full mt-1">
+                <Listbox
                   value={anime.status}
-                  onChange={(e) =>
-                    handleUpdateStatus(anime._id, e.target.value)
-                  }
+                  onChange={(value) => handleUpdateStatus(anime._id, value)}
                 >
-                  <option value="Assistindo">Assistindo</option>
-                  <option value="Concluído">Concluído</option>
-                  <option value="Dropado">Dropado</option>
-                  <option value="Planejo ver">Planejo ver</option>
-                </select>
+                  <ListboxButton className="relative w-full text-center cursor-pointer bg-white border border-gray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    {anime.status}
+                  </ListboxButton>
+
+                  <ListboxOptions className="absolute z-10 mt-1 w-full bg-white border border-gray rounded-md shadow-lg max-h-40 overflow-auto">
+                    {statuses.map((status) => (
+                      <ListboxOption
+                        key={status}
+                        value={status}
+                        className="cursor-pointer px-4 py-2 ui-active:bg-aBlue ui-active:text-aWhite ui-selected:font-bold"
+                      >
+                        {status}
+                      </ListboxOption>
+                    ))}
+                  </ListboxOptions>
+                </Listbox>
               </div>
-              <button onClick={() => handleDelete(anime._id)} className="bg-buttonRed text-aWhite rounded-md p-2">Remover</button>
+
+              <button
+                className="mt-2 bg-red-500 text-aWhite px-3 py-1 rounded-md hover:bg-buttonRed"
+                onClick={() => handleDelete(anime._id)}
+              >
+                Remover
+              </button>
             </li>
           ))}
         </ul>

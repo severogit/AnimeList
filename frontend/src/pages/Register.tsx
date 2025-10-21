@@ -28,7 +28,7 @@ export default function Register() {
           placeholder="Nome"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-aBlue"
+          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
         />
 
         <input
@@ -36,7 +36,7 @@ export default function Register() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-aBlue"
+          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
         />
 
         <input
@@ -44,12 +44,12 @@ export default function Register() {
           placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-aBlue"
+          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
         />
 
         <button
           onClick={handleRegister}
-          className="w-full bg-buttonBlue text-aWhite p-3 rounded hover:bg-aBlue transition-colors"
+          className="w-full bg-buttonBlue text-aWhite p-3 rounded hover:bg-hoverBlue transition-colors"
         >
           Cadastrar
         </button>

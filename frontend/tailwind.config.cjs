@@ -8,7 +8,7 @@ module.exports = {
         aWhite: "#FFFFFF",
         lightGray: "#EFEFEF",
         gray: "#4B5563",
-        aBlue: "#60A5FA",
+        hoverBlue: "#60A5FA",
         buttonBlue: "#3B82F6",
         buttonRed: "#EF4444"
       },
