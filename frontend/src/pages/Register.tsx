@@ -56,7 +56,7 @@ export default function Register() {
 
         <p className="mt-4 text-center text-headerBg">
           Já tem conta?{" "}
-          <Link className="text-buttonBlue hover:underline" to="/">
+          <Link className="text-buttonBlue hover:underline" to="/login">
             Login
           </Link>
         </p>

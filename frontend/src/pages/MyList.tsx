@@ -21,6 +21,8 @@ export default function MyList() {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const token = localStorage.getItem("token");
   if (!token) {
@@ -28,11 +30,13 @@ export default function MyList() {
     window.location.href = "/";
   }
 
-  const fetchAnimes = async () => {
+  const fetchAnimes = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await api.get("/animes");
-      setAnimes(res.data);
+      const res = await api.get(`/animes?page=${page}&limit=16`);
+      setAnimes(res.data.animes);
+      setTotalPages(res.data.pagination.totalPages);
+      setCurrentPage(res.data.pagination.page);
     } catch (err) {
       console.error(err);
       alert("Erro ao carregar animes");
@@ -55,9 +59,9 @@ export default function MyList() {
         const anime = data.data[0];
         return {
           malId: Number(anime.mal_id),
-          title: anime.title, 
-          url: anime.url, 
-          imageUrl: anime.images.jpg.image_url, 
+          title: anime.title,
+          url: anime.url,
+          imageUrl: anime.images.jpg.image_url,
         };
       }
       return null;
@@ -79,10 +83,10 @@ export default function MyList() {
         return;
       }
 
-      const res = await api.post("/animes", animeData);
+      await api.post("/animes", animeData);
 
-      setAnimes([...animes, res.data]);
       setNewTitle("");
+      fetchAnimes(1); 
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.msg || "Erro ao adicionar anime");
@@ -93,8 +97,8 @@ export default function MyList() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      const res = await api.put(`/animes/${id}`, { status: newStatus });
-      setAnimes(animes.map((a) => (a._id === id ? res.data : a)));
+      await api.put(`/animes/${id}`, { status: newStatus });
+      fetchAnimes(currentPage);
     } catch (err) {
       console.error(err);
       alert("Erro ao atualizar status");
@@ -105,11 +109,19 @@ export default function MyList() {
     if (!confirm("Deseja realmente remover este anime?")) return;
     try {
       await api.delete(`/animes/${id}`);
-      setAnimes(animes.filter((a) => a._id !== id));
+      fetchAnimes(currentPage);
     } catch (err) {
       console.error(err);
       alert("Erro ao remover anime");
     }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) fetchAnimes(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) fetchAnimes(currentPage + 1);
   };
 
   return (
@@ -125,7 +137,10 @@ export default function MyList() {
           onChange={(e) => setNewTitle(e.target.value)}
           className="border border-gray-300 rounded-md px-3 py-2 flex-1"
         />
-        <button className="bg-buttonBlue text-white px-4 py-2 rounded-md hover:bg-hoverBlue" onClick={handleAdd}>
+        <button
+          className="bg-buttonBlue text-white px-4 py-2 rounded-md hover:bg-hoverBlue"
+          onClick={handleAdd}
+        >
           Adicionar
         </button>
       </div>
@@ -133,56 +148,78 @@ export default function MyList() {
       {loading ? (
         <p>Carregando...</p>
       ) : (
-        <ul className="flex flex-wrap gap-6 justify-center">
-          {animes.map((anime) => (
-            <li
-              key={anime._id}
-              className="flex flex-col items-center gap-2 bg-lightGray p-4 rounded-lg shadow-md w-40"
-            >
-              <img
-                src={anime.imageUrl}
-                alt={anime.title}
-                className="w-36 h-48 object-cover rounded-md"
-              />
-              <strong
-                className="truncate w-full text-center"
-                title={anime.title}
+        <>
+          <ul className="flex flex-wrap gap-6 justify-center">
+            {animes.map((anime) => (
+              <li
+                key={anime._id}
+                className="flex flex-col items-center gap-2 bg-lightGray p-4 rounded-lg shadow-md w-40"
               >
-                {anime.title}
-              </strong>
-
-              <div className="relative w-full mt-1">
-                <Listbox
-                  value={anime.status}
-                  onChange={(value) => handleUpdateStatus(anime._id, value)}
+                <img
+                  src={anime.imageUrl}
+                  alt={anime.title}
+                  className="w-36 h-48 object-cover rounded-md"
+                />
+                <strong
+                  className="truncate w-full text-center"
+                  title={anime.title}
                 >
-                  <ListboxButton className="relative w-full text-center cursor-pointer bg-white border border-gray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    {anime.status}
-                  </ListboxButton>
+                  {anime.title}
+                </strong>
 
-                  <ListboxOptions className="absolute z-10 mt-1 w-full bg-white border border-gray rounded-md shadow-lg max-h-40 overflow-auto">
-                    {statuses.map((status) => (
-                      <ListboxOption
-                        key={status}
-                        value={status}
-                        className="cursor-pointer px-4 py-2 ui-active:bg-aBlue ui-active:text-aWhite ui-selected:font-bold"
-                      >
-                        {status}
-                      </ListboxOption>
-                    ))}
-                  </ListboxOptions>
-                </Listbox>
-              </div>
+                <div className="relative w-full mt-1">
+                  <Listbox
+                    value={anime.status}
+                    onChange={(value) => handleUpdateStatus(anime._id, value)}
+                  >
+                    <ListboxButton className="relative w-full text-center cursor-pointer bg-white border border-gray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {anime.status}
+                    </ListboxButton>
 
-              <button
-                className="mt-2 bg-red-500 text-aWhite px-3 py-1 rounded-md hover:bg-buttonRed"
-                onClick={() => handleDelete(anime._id)}
-              >
-                Remover
-              </button>
-            </li>
-          ))}
-        </ul>
+                    <ListboxOptions className="absolute z-10 mt-1 w-full bg-white border border-gray rounded-md shadow-lg max-h-40 overflow-auto">
+                      {statuses.map((status) => (
+                        <ListboxOption
+                          key={status}
+                          value={status}
+                          className="cursor-pointer px-4 py-2 ui-active:bg-blue-500 ui-active:text-aWhite ui-selected:font-bold"
+                        >
+                          {status}
+                        </ListboxOption>
+                      ))}
+                    </ListboxOptions>
+                  </Listbox>
+                </div>
+
+                <button
+                  className="mt-2 bg-red-500 text-aWhite px-3 py-1 rounded-md hover:bg-buttonRed"
+                  onClick={() => handleDelete(anime._id)}
+                >
+                  Remover
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          <div className="flex justify-center gap-2 mt-4">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-300 rounded-md disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span className="px-3 py-1">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-300 rounded-md disabled:opacity-50"
+            >
+              Próximo
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

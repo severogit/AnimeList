@@ -18,6 +18,10 @@ export default function Header() {
       </div>
 
       <nav className="ml-auto flex items-center gap-4">
+        <Link to="/" className="text-aWhite hover:text-lightGray">
+          Home
+        </Link>
+
         {isLogged && (
           <Link to="/mylist" className="text-aWhite hover:text-lightGray">
             Minha Lista
