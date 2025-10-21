@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header() {
-  const token = localStorage.getItem("token");
-  const isLogged = !!token;
+  const { isLogged, logout } = useAuth();
 
   return (
     <header className="bg-headerBg h-20 relative flex items-center px-4">
@@ -23,14 +23,30 @@ export default function Header() {
         </Link>
 
         {isLogged && (
-          <Link to="/mylist" className="text-aWhite hover:text-lightGray">
-            Minha Lista
-          </Link>
+          <>
+            <Link to="/mylist" className="text-aWhite hover:text-lightGray">
+              Minha Lista
+            </Link>
+            <button
+              onClick={logout}
+              className="text-aWhite hover:text-lightGray"
+            >
+              Logout
+            </button>
+          </>
         )}
 
-        <Link to="/about" className="text-aWhite hover:text-lightGray">
-          Sobre
-        </Link>
+        {!isLogged && (
+          <>
+            <Link to="/login" className="text-aWhite hover:text-lightGray">
+              Login
+            </Link>
+            <Link to="/register" className="text-aWhite hover:text-lightGray">
+              Registrar
+            </Link>
+          </>
+        )}
+
       </nav>
     </header>
   );

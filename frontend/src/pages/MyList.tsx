@@ -5,17 +5,28 @@ import {
   ListboxOptions,
   ListboxOption,
 } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+
 import api from "../services/api";
 
 interface Anime {
   _id: string;
   malId: number;
   title: string;
-  status: string;
+  status: Status;
   imageUrl: string;
 }
 
-const statuses = ["Assistindo", "Concluído", "Dropado", "Planejo ver"];
+const statuses = ["Assistindo", "Concluído", "Dropado", "Planejo ver"] as const;
+
+type Status = (typeof statuses)[number];
+
+const statusColors: Record<Status, string> = {
+  Assistindo: "bg-statusWatching",
+  Concluído: "bg-statusCompleted",
+  Dropado: "bg-gray",
+  "Planejo ver": "bg-statusPlanToWatch",
+};
 
 export default function MyList() {
   const [animes, setAnimes] = useState<Anime[]>([]);
@@ -86,7 +97,7 @@ export default function MyList() {
       await api.post("/animes", animeData);
 
       setNewTitle("");
-      fetchAnimes(1); 
+      fetchAnimes(1);
     } catch (err: any) {
       console.error(err);
       alert(err.response?.data?.msg || "Erro ao adicionar anime");
@@ -172,8 +183,15 @@ export default function MyList() {
                     value={anime.status}
                     onChange={(value) => handleUpdateStatus(anime._id, value)}
                   >
-                    <ListboxButton className="relative w-full text-center cursor-pointer bg-white border border-gray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <ListboxButton
+                      className={`relative w-full text-left cursor-pointer border border-gray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 
+                        ${statusColors[anime.status]} text-aWhite`}
+                    >
                       {anime.status}
+                      <ChevronDownIcon
+                        className="pointer-events-none absolute top-2.5 right-2.5 size-4 fill-aWhite/60 w-5"
+                        aria-hidden="true"
+                      />
                     </ListboxButton>
 
                     <ListboxOptions className="absolute z-10 mt-1 w-full bg-white border border-gray rounded-md shadow-lg max-h-40 overflow-auto">
@@ -181,7 +199,7 @@ export default function MyList() {
                         <ListboxOption
                           key={status}
                           value={status}
-                          className="cursor-pointer px-4 py-2 ui-active:bg-blue-500 ui-active:text-aWhite ui-selected:font-bold"
+                          className="cursor-pointer px-4 py-2 ui-active:bg-blue-500 ui-active:text-aWhite ui-selected:font-bold hover:bg-lightGray"
                         >
                           {status}
                         </ListboxOption>
@@ -189,7 +207,6 @@ export default function MyList() {
                     </ListboxOptions>
                   </Listbox>
                 </div>
-
                 <button
                   className="mt-2 bg-red-500 text-aWhite px-3 py-1 rounded-md hover:bg-buttonRed"
                   onClick={() => handleDelete(anime._id)}
