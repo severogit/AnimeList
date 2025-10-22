@@ -4,16 +4,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        headerBg: "#6a6a6a",
+        headerBg: "#000080",
         aWhite: "#FFFFFF",
         lightGray: "#EFEFEF",
         gray: "#4B5563",
         hoverBlue: "#60A5FA",
+        hoverRed: "#DC2626",
         buttonBlue: "#3B82F6",
         buttonRed: "#EF4444",
         statusWatching: "#22C55E", 
         statusCompleted: "#3B82F6", 
-        statusDropped: "#FFFF00", 
+        statusDropped: "#650304", 
         statusPlanToWatch: "#FBBF24",
       },
       minHeight: {

@@ -5,7 +5,7 @@ export default function Home() {
   const { isLogged } = useAuth();
 
   return (
-    <div className="min-h-screen-minus-header bg-gray-100 flex flex-col">
+    <div className="min-h-screen-minus-header bg-lightGray flex flex-col">
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4">
         <h2 className="text-2xl font-semibold mb-4">Bem-vindo ao AnimeList!</h2>
         <p className="mb-6 text-gray-700 max-w-md">
