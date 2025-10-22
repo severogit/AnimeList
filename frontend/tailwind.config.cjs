@@ -17,6 +17,7 @@ module.exports = {
         statusCompleted: "#3B82F6", 
         statusDropped: "#650304", 
         statusPlanToWatch: "#FBBF24",
+        "sliderGray": 'rgb(50, 50, 50, 0.7)'
       },
       minHeight: {
         "screen-minus-header": "calc(100vh - 80px)",
