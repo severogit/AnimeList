@@ -62,43 +62,46 @@ export default function Home() {
           <h2 className="text-aWhite text-2xl font-semibold mb-4 text-left">
             Top Animes
           </h2>
-
-          <Swiper
-            modules={[Pagination, Autoplay]}
-            slidesPerView={3}
-            spaceBetween={8}
-            autoplay={{ delay: 4000 }}
-            loop
-            breakpoints={{
-              320: { slidesPerView: 2 },
-              640: { slidesPerView: 3 },
-              1024: { slidesPerView: 5 },
-            }}
-          >
-            {topAnimes.map((anime) => (
-              <SwiperSlide key={anime.mal_id}>
-                <div className="relative overflow-hidden shadow-lg duration-300 flex flex-col items-center">
-                  <img
-                    src={anime.images.jpg.image_url}
-                    alt={anime.title}
-                    className="object-cover w-full h-80 rounded"
-                  />
-                  <div className="absolute bottom-0 left-0 w-full p-2 text-center text-white rounded bg-sliderGray">
-                    <p className="text-sm font-semibold truncate">
-                      {anime.title}
-                    </p>
-                    {anime.episodes && (
-                      <p className="text-xs mt-1">{anime.episodes} Episódios</p>
-                    )}
+          {topAnimes?.length > 0 && (
+            <Swiper
+              modules={[Pagination, Autoplay]}
+              slidesPerView={3}
+              spaceBetween={8}
+              autoplay={{ delay: 2000 }}
+              loop
+              breakpoints={{
+                320: { slidesPerView: 2 },
+                640: { slidesPerView: 3 },
+                1024: { slidesPerView: 5 },
+              }}
+            >
+              {topAnimes.map((anime) => (
+                <SwiperSlide key={anime.mal_id}>
+                  <div className="relative overflow-hidden shadow-lg duration-300 flex flex-col items-center">
+                    <img
+                      src={anime.images.jpg.image_url}
+                      alt={anime.title}
+                      className="object-cover w-full h-80 rounded"
+                    />
+                    <div className="absolute bottom-0 left-0 w-full p-2 text-center text-white rounded bg-sliderGray">
+                      <p className="text-sm font-semibold truncate">
+                        {anime.title}
+                      </p>
+                      {anime.episodes && (
+                        <p className="text-xs mt-1">
+                          {anime.episodes} Episódios
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
         </section>
       </main>
 
-      <footer className="bg-gray-200 text-aWhite p-4 text-center mt-12">
+      <footer className="w-full p-4 text-center text-white bg-footerBg rounded-t">
         &copy; {new Date().getFullYear()} AnimeList. Todos os direitos
         reservados.
       </footer>

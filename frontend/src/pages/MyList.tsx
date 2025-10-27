@@ -98,7 +98,7 @@ export default function MyList() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-myListBg">
       <h1 className="text-2xl font-bold mb-4 text-center text-aWhite">
         Minha Lista de Animes
       </h1>
@@ -121,7 +121,7 @@ export default function MyList() {
             {animes.map((anime) => (
               <li
                 key={anime._id}
-                className="flex flex-col items-center gap-2 bg-lightGray p-4 rounded-lg shadow-md w-40"
+                className="flex flex-col items-center gap-2 bg-aWhite p-4 rounded-lg shadow-md w-40"
               >
                 <img
                   src={anime.imageUrl}
@@ -129,7 +129,7 @@ export default function MyList() {
                   className="w-36 h-48 object-cover rounded-md"
                 />
                 <strong
-                  className="truncate w-full text-center"
+                  className="truncate w-full text-center text-primary"
                   title={anime.title}
                 >
                   {anime.title}
