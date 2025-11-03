@@ -1,28 +1,42 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        headerBg: "#121212",
-        myListBg: "#2a2a2a",
-        primary: "#000000",
-        aWhite: "#FFFFFF",
-        lightGray: "#EFEFEF",
-        gray: "#4B5563",
-        buttonBlue: "#3B82F6",
-        buttonRed: "#EF4444",
-        btnlBlue: "#57B9FF",
-        btnYellow: "#FACC15",
-        hoverBlue: "#60A5FA",
-        hoverRed: "#DC2626",
-        hoverYellow: "#E6B800",
-        statusWatching: "#22C55E", 
-        statusCompleted: "#3B82F6", 
-        statusDropped: "#650304", 
-        statusPlanToWatch: "#FBBF24",
-        footerBg: "#121212",
-        "sliderGray": 'rgb(50 50 50 / 0.7)'
+        surface: {
+          base: "#000000",
+          header: "#121212",
+          footer: "#121212",
+          muted: "#2a2a2a",
+          card: "#FFFFFF",
+          overlay: "rgb(50 50 50 / 0.7)",
+        },
+        fg: {
+          DEFAULT: "#FFFFFF",
+          muted: "#EFEFEF",
+          inverse: "#000000",
+        },
+        brand: {
+          primary: "#3B82F6",
+          secondary: "#57B9FF",
+          warning: "#FACC15",
+          hover: {
+            primary: "#60A5FA",
+            secondary: "#60A5FA",
+            warning: "#E6B800",
+          },
+        },
+        danger: {
+          DEFAULT: "#EF4444",
+          hover: "#DC2626",
+        },
+        status: {
+          watching: "#22C55E",
+          completed: "#3B82F6",
+          dropped: "#650304",
+          plan: "#FBBF24",
+        },
       },
       minHeight: {
         "screen-minus-header": "calc(100vh - 80px)",
