@@ -61,7 +61,7 @@ export default function MyList() {
       fetchAnimes(1);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        alert(err.message || "Erro ao adicionar anime");
+        alert("Anime ja adicionado");
       }
     } finally {
       setLoading(false);
@@ -183,7 +183,7 @@ export default function MyList() {
             >
               Anterior
             </button>
-            <span className="px-3 py-1">
+            <span className="px-3 py-1 text-aWhite">
               {currentPage} / {totalPages}
             </span>
             <button

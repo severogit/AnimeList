@@ -52,7 +52,7 @@ export default function Home() {
 
           <Link
             to={isLogged ? "/mylist" : "/login"}
-            className="bg-aWhite text-black px-6 py-2.5 rounded-full border-2 border-transparent font-semibold tracking-tight w-max hover:bg-lightGray transition-all"
+            className="bg-aWhite text-black px-6 py-2.5 rounded-full font-semibold tracking-tight w-max hover:bg-lightGray transition-all"
           >
             {isLogged ? "Minha Lista" : "Comece Já"}
           </Link>
@@ -77,7 +77,7 @@ export default function Home() {
             >
               {topAnimes.map((anime) => (
                 <SwiperSlide key={anime.mal_id}>
-                  <div className="relative overflow-hidden shadow-lg duration-300 flex flex-col items-center">
+                  <div className="relative overflow-hidden shadow-lg flex flex-col items-center">
                     <img
                       src={anime.images.jpg.image_url}
                       alt={anime.title}
