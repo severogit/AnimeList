@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+﻿import mongoose, { Document, Schema } from "mongoose";
 
 export interface IAnime extends Document {
   userId: string;       // ID do usuário dono da lista
@@ -6,6 +6,8 @@ export interface IAnime extends Document {
   title: string;
   imageUrl: string;
   status: "Planejo ver" | "Assistindo" | "Concluído" | "Dropado";
+  score?: number;
+  notes?: string;
   createdAt: Date;
 }
 
@@ -15,6 +17,8 @@ const animeSchema = new Schema<IAnime>({
   title: { type: String, required: true },
   imageUrl: { type: String },
   status: { type: String, enum: ["Planejo ver","Assistindo","Concluído","Dropado"], default: "Planejo ver" },
+  score: { type: Number, min: 0, max: 10, default: 0 },
+  notes: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now },
 });
 

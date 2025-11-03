@@ -8,6 +8,8 @@ export interface Anime {
   status: Status;
   imageUrl: string;
   url: string;
+  score?: number;
+  notes?: string;
 }
 
 export interface JikanAnime {

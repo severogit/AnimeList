@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+﻿import { Request, Response } from "express";
 import Anime from "../models/Anime";
 
 export const addAnime = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { malId, title, imageUrl, status } = req.body;
+    const { malId, title, imageUrl, status, score, notes } = req.body;
 
     if (!malId || !title) {
       return res.status(400).json({ msg: "malId e title são obrigatórios" });
@@ -21,6 +21,8 @@ export const addAnime = async (req: Request, res: Response) => {
       title,
       imageUrl,
       status: status || "Planejo ver",
+      score: typeof score === "number" ? Math.max(0, Math.min(10, score)) : 0,
+      notes: typeof notes === "string" ? notes : "",
     });
 
     res.status(201).json(anime);
@@ -64,14 +66,23 @@ export const updateAnime = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
     const { animeId } = req.params;
-    const { status } = req.body;
+    const { status, score, notes } = req.body as { status?: string; score?: unknown; notes?: unknown };
 
-    if (!status) return res.status(400).json({ msg: "Status é obrigatório" });
+    
 
     const anime = await Anime.findOne({ _id: animeId, userId });
-    if (!anime) return res.status(404).json({ msg: "Anime não encontrado" });
+    if (!anime) return res.status(404).json({ msg: "Anime não encontrado"});
 
-    anime.status = status;
+    if (typeof status === "string" && status.trim().length > 0) {
+      (anime as any).status = status as any;
+    }
+    if (typeof score === "number") {
+      const clamped = Math.max(0, Math.min(10, score));
+      (anime as any).score = clamped;
+    }
+    if (typeof notes === "string") {
+      (anime as any).notes = notes;
+    }
     await anime.save();
 
     res.json(anime);

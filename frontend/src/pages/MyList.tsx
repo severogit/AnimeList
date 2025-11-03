@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Listbox,
   ListboxButton,
@@ -8,16 +8,15 @@ import {
 import api from "../services/api";
 
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { useAuth } from "../context/AuthContext";
 import Typeahead from "../components/Typeahead";
 import type { Anime, Status } from "../types/anime";
 import { statuses } from "../types/anime";
 
 const statusColors: Record<Status, string> = {
-  Assistindo: "bg-statusWatching",
-  Concluído: "bg-statusCompleted",
-  Dropado: "bg-statusDropped",
-  "Planejo ver": "bg-statusPlanToWatch",
+  Assistindo: "bg-status-watching",
+  Concluído: "bg-status-completed",
+  Dropado: "bg-status-dropped",
+  "Planejo ver": "bg-status-plan",
 };
 
 export default function MyList() {
@@ -26,12 +25,13 @@ export default function MyList() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { isLogged } = useAuth();
-
-  if (!isLogged) {
-    alert("Você precisa estar logado para acessar a lista!");
-    window.location.href = "/";
-  }
+  
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  useEffect(() => {
+    if (!token) {
+      window.location.href = "/";
+    }
+  }, [token]);
 
   const fetchAnimes = async (page = 1) => {
     setLoading(true);
@@ -98,15 +98,15 @@ export default function MyList() {
   };
 
   return (
-    <div className="p-6 bg-myListBg">
-      <h1 className="text-2xl font-bold mb-4 text-center text-aWhite">
+    <div className="p-6 bg-surface-muted">
+      <h1 className="text-2xl font-bold mb-4 text-center text-fg">
         Minha Lista de Animes
       </h1>
 
       <div className="flex gap-2 mb-6">
         <Typeahead onSelect={(anime) => setSelectedAnime(anime)} />
         <button
-          className="bg-buttonBlue text-aWhite px-4 py-2 rounded-md hover:bg-hoverBlue"
+          className="bg-brand-primary text-fg px-4 py-2 rounded-md hover:bg-brand-hover-primary"
           onClick={handleAdd}
         >
           Adicionar
@@ -117,11 +117,11 @@ export default function MyList() {
         <p>Carregando...</p>
       ) : (
         <>
-          <ul className="flex flex-wrap gap-6 justify-center">
+          <ul className="flex flex-wrap gap-6 justify-center max-w-5xl mx-auto">
             {animes.map((anime) => (
               <li
                 key={anime._id}
-                className="flex flex-col items-center gap-2 bg-aWhite p-4 rounded-lg shadow-md w-40"
+                className="flex flex-col items-center gap-2 bg-surface-card p-4 rounded-lg shadow-md w-40"
               >
                 <img
                   src={anime.imageUrl}
@@ -129,7 +129,7 @@ export default function MyList() {
                   className="w-36 h-48 object-cover rounded-md"
                 />
                 <strong
-                  className="truncate w-full text-center text-primary"
+                  className="truncate w-full text-center text-fg-inverse"
                   title={anime.title}
                 >
                   {anime.title}
@@ -141,12 +141,12 @@ export default function MyList() {
                     onChange={(value) => handleUpdateStatus(anime._id!, value)}
                   >
                     <ListboxButton
-                      className={`relative w-full text-left cursor-pointer border border-lightGray rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-buttonBlue 
-                        ${statusColors[anime.status]} text-aWhite`}
-                    >
+                      className={`relative w-full text-left cursor-pointer border border-fg-muted rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary 
+                        ${statusColors[anime.status]} text-fg`}
+                     >
                       {anime.status}
                       <ChevronDownIcon
-                        className="pointer-events-none absolute top-2.5 right-2.5 size-4 fill-aWhite/60 w-5"
+                        className="pointer-events-none absolute top-2.5 right-2.5 size-4 fill-fg/60 w-5"
                         aria-hidden="true"
                       />
                     </ListboxButton>
@@ -156,7 +156,7 @@ export default function MyList() {
                         <ListboxOption
                           key={status}
                           value={status}
-                          className="cursor-pointer px-4 py-2 ui-active:bg-hoverBlue ui-active:text-aWhite ui-selected:font-bold hover:bg-lightGray"
+                          className="cursor-pointer px-4 py-2 ui-active:bg-brand-hover-primary ui-active:text-fg ui-selected:font-bold hover:bg-fg-muted"
                         >
                           {status}
                         </ListboxOption>
@@ -166,7 +166,7 @@ export default function MyList() {
                 </div>
 
                 <button
-                  className="mt-2 bg-buttonRed text-aWhite px-3 py-1 rounded-md hover:bg-hoverRed"
+                  className="mt-2 bg-danger text-fg px-3 py-1 rounded-md hover:bg-danger-hover"
                   onClick={() => handleDelete(anime._id!)}
                 >
                   Remover
@@ -179,17 +179,17 @@ export default function MyList() {
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
-              className="px-3 py-1 bg-hoverBlue rounded-md text-aWhite"
+              className="px-3 py-1 bg-brand-hover-primary rounded-md text-fg"
             >
               Anterior
             </button>
-            <span className="px-3 py-1 text-aWhite">
+            <span className="px-3 py-1 text-fg">
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-hoverBlue rounded-md text-aWhite"
+              className="px-3 py-1 bg-brand-hover-primary rounded-md text-fg"
             >
               Próximo
             </button>

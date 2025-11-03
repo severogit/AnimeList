@@ -36,7 +36,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen-minus-header bg-primary flex flex-col">
+    <div className="min-h-screen-minus-header bg-surface-base flex flex-col">
       <main className="flex-1 flex flex-col items-center mt-16 px-4">
         <section className="w-2/3 text-left">
           <img
@@ -45,21 +45,21 @@ export default function Home() {
             alt="AnimeList Logo"
           />
 
-          <p className="mt-6 mb-12 text-aWhite max-w-md">
+          <p className="mt-6 mb-12 text-fg max-w-md">
             AnimeList é um projeto pessoal onde você pode gerenciar sua lista de
             animes favoritos de maneira fácil e prática.
           </p>
 
           <Link
             to={isLogged ? "/mylist" : "/login"}
-            className="bg-aWhite text-black px-6 py-2.5 rounded-full font-semibold tracking-tight w-max hover:bg-lightGray transition-all"
+            className="bg-surface-card text-fg-inverse px-6 py-2.5 rounded-full font-semibold tracking-tight w-max hover:bg-fg-muted transition-all"
           >
             {isLogged ? "Minha Lista" : "Comece Já"}
           </Link>
         </section>
 
         <section className="w-2/3 mt-12">
-          <h2 className="text-aWhite text-2xl font-semibold mb-4 text-left">
+          <h2 className="text-fg text-2xl font-semibold mb-4 text-left">
             Top Animes
           </h2>
           {topAnimes?.length > 0 && (
@@ -83,7 +83,7 @@ export default function Home() {
                       alt={anime.title}
                       className="object-cover w-full h-80 rounded"
                     />
-                    <div className="absolute bottom-0 left-0 w-full p-2 text-center text-white rounded bg-sliderGray">
+                    <div className="absolute bottom-0 left-0 w-full p-2 text-center text-white rounded bg-surface-overlay">
                       <p className="text-sm font-semibold truncate">
                         {anime.title}
                       </p>
@@ -101,7 +101,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="w-full p-4 text-center text-white bg-footerBg rounded-t">
+      <footer className="w-full p-4 text-center text-white bg-surface-footer rounded-t">
         &copy; {new Date().getFullYear()} AnimeList. Todos os direitos
         reservados.
       </footer>

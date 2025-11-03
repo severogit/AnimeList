@@ -19,8 +19,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-lightGray">
-      <div className="bg-aWhite p-8 rounded-lg shadow-md w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-fg-muted">
+      <div className="bg-surface-card p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-6 text-center">Cadastro</h1>
 
         <input
@@ -28,7 +28,7 @@ export default function Register() {
           placeholder="Nome"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
+          className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
         <input
@@ -36,7 +36,7 @@ export default function Register() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
+          className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
         <input
@@ -44,19 +44,19 @@ export default function Register() {
           placeholder="Senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
+          className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
         <button
           onClick={handleRegister}
-          className="w-full bg-buttonBlue text-aWhite p-3 rounded hover:bg-hoverBlue transition-colors"
+          className="w-full bg-brand-primary text-fg p-3 rounded hover:bg-brand-hover-primary transition-colors"
         >
           Cadastrar
         </button>
 
-        <p className="mt-4 text-center text-headerBg">
+        <p className="mt-4 text-center text-surface-header">
           Já tem conta?{" "}
-          <Link className="text-buttonBlue hover:underline" to="/login">
+          <Link className="text-brand-primary hover:underline" to="/login">
             Login
           </Link>
         </p>

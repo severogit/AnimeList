@@ -71,7 +71,7 @@ export default function Typeahead({ onSelect }: Typeaheadprops) {
           <ChevronDownIcon className="w-5 h-5 text-gray-400" />
         </ComboboxButton>
 
-        <ComboboxOptions className="absolute z-10 mt-1 w-full bg-white border border-lightGray rounded-md shadow-lg max-h-40 overflow-auto">
+        <ComboboxOptions className="absolute z-10 mt-1 w-full bg-surface-card border border-fg-muted rounded-md shadow-lg max-h-40 overflow-auto">
           {suggestions.length === 0 ? (
             <div className="px-4 py-2 text-gray-500">
               Nenhum anime encontrado
@@ -80,7 +80,7 @@ export default function Typeahead({ onSelect }: Typeaheadprops) {
             suggestions.map((anime) => (
               <ComboboxOption key={anime.malId} value={anime}>
                 {() => (
-                  <div className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-lightGray">
+                  <div className="flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-fg-muted">
                     <img
                       src={anime.imageUrl}
                       alt={anime.title}

@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 // Rotas básicas (temporárias)
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("API do MyAnimeList Clone está rodando! 🚀");
 });
 

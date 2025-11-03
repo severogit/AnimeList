@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 
@@ -18,8 +18,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-lightGray">
-      <div className="bg-aWhite p-8 rounded-lg shadow-md w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-fg-muted">
+      <div className="bg-surface-card p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
 
         <input
@@ -27,7 +27,7 @@ export default function Login() {
           placeholder="Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
+          className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
         <input
@@ -35,18 +35,18 @@ export default function Login() {
           placeholder="Senha"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          className="w-full p-3 mb-4 border border-lightGray rounded focus:outline-none focus:ring-2 focus:ring-hoverBlue"
+          className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
         <button
           onClick={handleLogin}
-          className="w-full bg-buttonBlue text-aWhite p-3 rounded hover:bg-hoverBlue transition-colors"
+          className="w-full bg-brand-primary text-fg p-3 rounded hover:bg-brand-hover-primary transition-colors"
         >
           Entrar
         </button>
 
-        <p className="mt-4 text-center text-headerBg">
-          Não tem conta? <Link className="text-buttonBlue hover:underline" to="/register">Cadastre-se</Link>
+        <p className="mt-4 text-center text-surface-header">
+          Não tem conta? <Link className="text-brand-primary hover:underline" to="/register">Cadastre-se</Link>
         </p>
       </div>
     </div>
