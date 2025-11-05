@@ -3,9 +3,10 @@ import { AuthProvider } from "./context/AuthContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import MyList from "./pages/MyList";
 import Header from "./components/Header";
-import NewList from "./pages/NewList"
+import MyList from "./pages/MyList";
+import NewList from "./pages/NewList";
+import SearchAnimes from "./pages/SearchAnimes";
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = localStorage.getItem("token");
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/newlist" element={<NewList />}></Route>
+          <Route path="/search" element={<SearchAnimes />}></Route>
           <Route
             path="/mylist"
             element={

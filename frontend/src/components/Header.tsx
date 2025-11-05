@@ -7,6 +7,7 @@ import {
   HomeIcon,
   Bars3Icon,
   XMarkIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/20/solid";
 
 export default function Header() {
@@ -50,6 +51,14 @@ export default function Header() {
         >
           Home
           <HomeIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+        </Link>
+
+        <Link
+          to="/search"
+          className="flex items-center justify-center gap-1 bg-brand-primary px-3 py-2 rounded-full text-sm lg:text-base font-bold hover:bg-brand-hover-primary transition"
+        >
+          Procurar
+          <MagnifyingGlassIcon className="w-4 h-4 lg:w-5 lg:h-5" />
         </Link>
 
         {isLogged && (
