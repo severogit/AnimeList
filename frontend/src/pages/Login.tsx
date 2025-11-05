@@ -26,7 +26,7 @@ export default function Login() {
           type="email"
           placeholder="Email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
@@ -34,7 +34,7 @@ export default function Login() {
           type="password"
           placeholder="Senha"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full p-3 mb-4 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary"
         />
 
@@ -46,7 +46,10 @@ export default function Login() {
         </button>
 
         <p className="mt-4 text-center text-surface-header">
-          Não tem conta? <Link className="text-brand-primary hover:underline" to="/register">Cadastre-se</Link>
+          Não tem conta?{" "}
+          <Link className="text-brand-primary hover:underline" to="/register">
+            Cadastre-se
+          </Link>
         </p>
       </div>
     </div>
