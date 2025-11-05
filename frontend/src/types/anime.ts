@@ -21,4 +21,15 @@ export interface JikanAnime {
     };
   };
   url: string;
+  score?: number;
+  synopsis?: string;
+  type?: string;
+  status?: string;
+  year?: number;
+  episodes?: number;
+}
+
+export interface JikanGenre {
+  mal_id: number;
+  name: string;
 }
