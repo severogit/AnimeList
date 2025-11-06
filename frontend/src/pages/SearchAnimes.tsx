@@ -9,8 +9,6 @@ interface JikanResponse<T> {
   };
 }
 
-const SKELETON_BATCH = 12;
-
 const STATIC_GENRES: JikanGenre[] = [
   { mal_id: 1, name: "Action" },
   { mal_id: 2, name: "Adventure" },
@@ -63,7 +61,7 @@ function AnimeCard({ anime }: { anime: JikanAnime }) {
       rel="noreferrer"
       className="group flex flex-col gap-2"
     >
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl border border-surface-card/30 bg-surface-muted/40 shadow-md transition-transform duration-200 group-hover:-translate-y-1">
+      <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-surface-card/30 bg-surface-muted/40 shadow-md transition-transform duration-200 group-hover:-translate-y-1 sm:h-72">
         <img
           src={imageSrc}
           alt={anime.title}
@@ -77,11 +75,10 @@ function AnimeCard({ anime }: { anime: JikanAnime }) {
   );
 }
 
-function SkeletonCard() {
+function Loader() {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="animate-pulse rounded-2xl bg-surface-muted/50 aspect-[2/3] w-full" />
-      <div className="animate-pulse h-4 w-2/3 rounded-full bg-surface-muted/40" />
+    <div className="flex items-center justify-center py-10">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
     </div>
   );
 }
@@ -379,21 +376,29 @@ export default function SearchAnimes() {
           {(selectedGenre || selectedYear || debouncedSearch) && (
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {selectedGenre && (
-                <span
-                  onClick={() => setSelectedGenre("")}
-                  className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-surface-card"
-                >
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-sm text-surface-card">
                   {genres.find(
                     (genre) => String(genre.mal_id) === selectedGenre
                   )?.name ?? "Genero selecionado"}
+                  <button
+                    type="button"
+                    className="text-surface-card/80 hover:text-white"
+                    onClick={() => setSelectedGenre("")}
+                  >
+                    x
+                  </button>
                 </span>
               )}
               {selectedYear && (
-                <span
-                  onClick={() => setSelectedYear("")}
-                  className="inline-flex items-center gap-2 rounded-full  bg-brand-secondary px-3 py-1 text-surface-card"
-                >
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-sm text-surface-card">
                   {selectedYear}
+                  <button
+                    type="button"
+                    className="text-surface-card/80 hover:text-white"
+                    onClick={() => setSelectedYear("")}
+                  >
+                    x
+                  </button>
                 </span>
               )}
               <button
@@ -425,11 +430,7 @@ export default function SearchAnimes() {
             )}
 
             {isInitialLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {Array.from({ length: SKELETON_BATCH }).map((_, index) => (
-                  <SkeletonCard key={`initial-skeleton-${index}`} />
-                ))}
-              </div>
+              <Loader />
             ) : results.length === 0 ? (
               <p className="text-fg-muted">
                 Nenhum anime encontrado com os filtros selecionados.
@@ -440,13 +441,8 @@ export default function SearchAnimes() {
                   {results.map((anime) => (
                     <AnimeCard key={anime.mal_id} anime={anime} />
                   ))}
-                  {isFetchingMore &&
-                    Array.from({ length: Math.min(SKELETON_BATCH, 8) }).map(
-                      (_, index) => (
-                        <SkeletonCard key={`fetching-skeleton-${index}`} />
-                      )
-                    )}
                 </div>
+                {isFetchingMore && <Loader />}
                 <div ref={sentinelRef} className="h-6" />
               </>
             )}
@@ -465,11 +461,7 @@ export default function SearchAnimes() {
                 </div>
               )}
               {seasonLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: SKELETON_BATCH }).map((_, index) => (
-                    <SkeletonCard key={`popular-skeleton-${index}`} />
-                  ))}
-                </div>
+                <Loader />
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {seasonPopular.map((anime) => (
@@ -491,11 +483,7 @@ export default function SearchAnimes() {
                 </div>
               )}
               {seasonLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Array.from({ length: SKELETON_BATCH }).map((_, index) => (
-                    <SkeletonCard key={`upcoming-skeleton-${index}`} />
-                  ))}
-                </div>
+                <Loader />
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {seasonUpcoming.map((anime) => (
