@@ -17,13 +17,24 @@ export default function Typeahead({ onSelect }: Typeaheadprops) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Anime[]>([]);
 
-  const mapJikanToAnime = (jikanAnime: JikanAnime): Anime => ({
-    malId: jikanAnime.mal_id,
-    title: jikanAnime.title,
-    status: "Planejo ver",
-    imageUrl: jikanAnime.images.jpg.image_url,
-    url: jikanAnime.url,
-  });
+  const mapJikanToAnime = (jikanAnime: JikanAnime): Anime => {
+    const derivedYear =
+      jikanAnime.year ??
+      (jikanAnime as any)?.aired?.prop?.from?.year ??
+      (jikanAnime as any)?.season_year;
+
+    return {
+      malId: jikanAnime.mal_id,
+      title: jikanAnime.title,
+      status: "Planejo ver",
+      imageUrl: jikanAnime.images.jpg.image_url,
+      url: jikanAnime.url,
+      year:
+        typeof derivedYear === "number" && Number.isFinite(derivedYear)
+          ? derivedYear
+          : undefined,
+    };
+  };
 
   const fetchSuggestions = async (q: string) => {
     if (!q.trim()) {

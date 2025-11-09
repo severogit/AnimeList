@@ -33,7 +33,7 @@ module.exports = {
         },
         status: {
           watching: "#22C55E", // green — status Assistindo
-          completed: "#3B82F6", // blue — status Concluído
+          completed: "#3B82F6", // blue — status Finalizado
           dropped: "#650304", // maroon — status Dropado
           plan: "#FBBF24", // amber — status Planejo ver
         },
