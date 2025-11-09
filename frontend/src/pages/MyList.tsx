@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Listbox,
   ListboxButton,
@@ -12,11 +12,15 @@ import Typeahead from "../components/Typeahead";
 import type { Anime, Status } from "../types/anime";
 import { statuses } from "../types/anime";
 
+const finalStatus = (
+  statuses.find((status) => status === "Finalizado") ?? statuses[1]
+) as Status;
+
 const statusColors: Record<Status, string> = {
   Assistindo: "bg-status-watching",
-  Concluído: "bg-status-completed",
   Dropado: "bg-status-dropped",
   "Planejo ver": "bg-status-plan",
+  [finalStatus]: "bg-status-completed",
 };
 
 export default function MyList() {
@@ -25,8 +29,9 @@ export default function MyList() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
   useEffect(() => {
     if (!token) {
       window.location.href = "/";
@@ -61,7 +66,7 @@ export default function MyList() {
       fetchAnimes(1);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        alert("Anime ja adicionado");
+        alert("Anime já adicionado");
       }
     } finally {
       setLoading(false);
@@ -143,7 +148,7 @@ export default function MyList() {
                     <ListboxButton
                       className={`relative w-full text-left cursor-pointer border border-fg-muted rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary 
                         ${statusColors[anime.status]} text-fg`}
-                     >
+                    >
                       {anime.status}
                       <ChevronDownIcon
                         className="pointer-events-none absolute top-2.5 right-2.5 size-4 fill-fg/60 w-5"
@@ -191,7 +196,7 @@ export default function MyList() {
               disabled={currentPage === totalPages}
               className="px-3 py-1 bg-brand-hover-primary rounded-md text-fg"
             >
-              Próximo
+              Proximo
             </button>
           </div>
         </>

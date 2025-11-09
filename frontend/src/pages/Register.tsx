@@ -19,7 +19,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-fg-muted">
+    <div className="min-h-screen flex items-center justify-center bg-surface-base">
       <div className="bg-surface-card p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-6 text-center">Cadastro</h1>
 

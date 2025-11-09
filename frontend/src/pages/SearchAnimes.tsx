@@ -1,6 +1,12 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import {
+  MagnifyingGlassIcon,
+  PlusIcon,
+  CheckIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
 import type { JikanAnime, JikanGenre } from "../types/anime";
+import api from "../services/api";
 
 interface JikanResponse<T> {
   data: T;
@@ -49,29 +55,94 @@ const mapJikanAnime = (raw: any): JikanAnime => ({
   episodes: raw.episodes,
 });
 
-function AnimeCard({ anime }: { anime: JikanAnime }) {
+interface AnimeCardProps {
+  anime: JikanAnime;
+  onAdd: (anime: JikanAnime) => void;
+  onRemove: (anime: JikanAnime) => void;
+  isAdding: boolean;
+  isRemoving: boolean;
+  isAdded: boolean;
+}
+
+function AnimeCard({
+  anime,
+  onAdd,
+  onRemove,
+  isAdding,
+  isRemoving,
+  isAdded,
+}: AnimeCardProps) {
   const imageSrc =
     anime.images?.jpg?.image_url ||
     "https://via.placeholder.com/225x318?text=Sem+Imagem";
 
   return (
-    <a
-      href={anime.url}
-      target="_blank"
-      rel="noreferrer"
-      className="group flex flex-col gap-2"
-    >
+    <div className="group relative flex flex-col gap-2">
       <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-surface-card/30 bg-surface-muted/40 shadow-md transition-transform duration-200 group-hover:-translate-y-1 sm:h-72">
-        <img
-          src={imageSrc}
-          alt={anime.title}
-          className="h-full w-full object-cover"
-        />
+        <a
+          href={anime.url}
+          target="_blank"
+          rel="noreferrer"
+          className="block h-full"
+        >
+          <img
+            src={imageSrc}
+            alt={anime.title}
+            className="h-full w-full object-cover transition duration-200 group-hover:blur-sm"
+          />
+        </a>
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-black/40 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100" />
+        <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <button
+            type="button"
+            aria-label={isAdded ? "Anime adicionado" : "Adicionar anime"}
+            className={`pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full shadow-lg transition ${
+              isAdded
+                ? "bg-brand-secondary text-fg"
+                : "bg-brand-primary text-fg hover:bg-brand-hover-primary"
+            } ${isAdding ? "opacity-80" : ""}`}
+            disabled={isAdded || isAdding}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!isAdded && !isAdding) {
+                onAdd(anime);
+              }
+            }}
+          >
+            {isAdded ? (
+              <CheckIcon className="h-5 w-5" />
+            ) : isAdding ? (
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <PlusIcon className="h-5 w-5" />
+            )}
+          </button>
+          {isAdded && (
+            <button
+              type="button"
+              aria-label="Remover anime da lista"
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-danger text-fg shadow-lg transition hover:bg-danger-hover disabled:opacity-70"
+              disabled={isRemoving}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (!isRemoving) {
+                  onRemove(anime);
+                }
+              }}
+            >
+              {isRemoving ? (
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : (
+                <TrashIcon className="h-5 w-5" />
+              )}
+            </button>
+          )}
+        </div>
       </div>
       <span className="text-sm font-semibold text-fg truncate">
         {anime.title || "Titulo desconhecido"}
       </span>
-    </a>
+    </div>
   );
 }
 
@@ -102,6 +173,18 @@ export default function SearchAnimes() {
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [userAnimes, setUserAnimes] = useState<Map<number, string>>(
+    () => new Map<number, string>()
+  );
+  const [addedMalIds, setAddedMalIds] = useState<Set<number>>(
+    () => new Set<number>()
+  );
+  const [addingAnimeId, setAddingAnimeId] = useState<number | null>(null);
+  const [removingAnimeId, setRemovingAnimeId] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -122,6 +205,51 @@ export default function SearchAnimes() {
     );
     return () => clearTimeout(timeout);
   }, [searchTerm]);
+
+  useEffect(() => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      setAddedMalIds(new Set<number>());
+      return;
+    }
+
+    const fetchUserAnimes = async () => {
+      try {
+        const response = await api.get("/animes");
+        const list = Array.isArray(response.data?.animes)
+          ? (response.data.animes as Array<{
+              _id?: string;
+              malId?: number;
+            }>)
+          : [];
+
+        const map = new Map<number, string>();
+        for (const anime of list) {
+          if (typeof anime?.malId === "number" && typeof anime?._id === "string") {
+            map.set(anime.malId, anime._id);
+          }
+        }
+
+        setUserAnimes(map);
+        setAddedMalIds(
+          new Set<number>(Array.from(map.keys()))
+        );
+      } catch (error) {
+        console.warn("Nao foi possivel carregar a lista do usuario.", error);
+      }
+    };
+
+    fetchUserAnimes();
+  }, []);
+
+  useEffect(() => {
+    if (!feedback) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setFeedback(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [feedback]);
 
   const filtersActive = Boolean(
     debouncedSearch || selectedGenre || selectedYear
@@ -209,6 +337,118 @@ export default function SearchAnimes() {
     loadSearchResults,
     currentPage,
   ]);
+
+  const handleAddAnime = useCallback(
+    async (anime: JikanAnime) => {
+      if (addedMalIds.has(anime.mal_id)) {
+        setFeedback({
+          type: "error",
+          message: "Este anime ja esta na sua lista.",
+        });
+        return;
+      }
+
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        setFeedback({
+          type: "error",
+          message: "Faca login para adicionar animes a sua lista.",
+        });
+        return;
+      }
+
+      setAddingAnimeId(anime.mal_id);
+
+      const imageUrl =
+        anime.images?.jpg?.image_url ||
+        "https://via.placeholder.com/225x318?text=Sem+Imagem";
+
+      try {
+        const response = await api.post("/animes", {
+          malId: anime.mal_id,
+          title: anime.title,
+          imageUrl,
+          status: "Planejo ver",
+          score: typeof anime.score === "number" ? anime.score : undefined,
+          year: typeof anime.year === "number" ? anime.year : undefined,
+        });
+
+        const created = response.data as { _id?: string; malId?: number } | undefined;
+
+        if (typeof created?._id === "string") {
+          setUserAnimes((prev) => {
+            const updated = new Map(prev);
+            updated.set(anime.mal_id, created._id);
+            return updated;
+          });
+        }
+
+        setAddedMalIds((prev) => {
+          const updated = new Set(prev);
+          updated.add(anime.mal_id);
+          return updated;
+        });
+
+        setFeedback({
+          type: "success",
+          message: `"${anime.title}" adicionado a sua lista.`,
+        });
+      } catch (error) {
+        const message =
+          (error as any)?.response?.data?.msg ??
+          "Nao foi possivel adicionar o anime. Tente novamente.";
+        setFeedback({ type: "error", message });
+      } finally {
+        setAddingAnimeId(null);
+      }
+    },
+    [addedMalIds]
+  );
+
+  const handleRemoveAnime = useCallback(
+    async (anime: JikanAnime) => {
+      const animeId = userAnimes.get(anime.mal_id);
+      if (!animeId) {
+        setFeedback({
+          type: "error",
+          message: "Este anime nao esta na sua lista.",
+        });
+        return;
+      }
+
+      setRemovingAnimeId(anime.mal_id);
+
+      try {
+        await api.delete(`/animes/${animeId}`);
+
+        setUserAnimes((prev) => {
+          const updated = new Map(prev);
+          updated.delete(anime.mal_id);
+          return updated;
+        });
+
+        setAddedMalIds((prev) => {
+          const updated = new Set(prev);
+          updated.delete(anime.mal_id);
+          return updated;
+        });
+
+        setFeedback({
+          type: "success",
+          message: `"${anime.title}" removido da sua lista.`,
+        });
+      } catch (error) {
+        const message =
+          (error as any)?.response?.data?.msg ??
+          "Nao foi possivel remover o anime. Tente novamente.";
+        setFeedback({ type: "error", message });
+      } finally {
+        setRemovingAnimeId(null);
+      }
+    },
+    [userAnimes]
+  );
 
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -310,6 +550,17 @@ export default function SearchAnimes() {
   return (
     <div className="min-h-screen bg-surface-base text-fg px-4 py-6 sm:px-6 lg:px-10">
       <div className="max-w-6xl mx-auto">
+        {feedback && (
+          <div
+            className={`mb-6 rounded-lg px-4 py-3 text-sm ${
+              feedback.type === "success"
+                ? "border border-brand-primary/40 bg-brand-primary/10 text-brand-primary"
+                : "border border-danger/40 bg-danger/10 text-danger"
+            }`}
+          >
+            {feedback.message}
+          </div>
+        )}
         <header className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Procurar animes</h1>
           <p className="text-fg-muted">
@@ -439,7 +690,15 @@ export default function SearchAnimes() {
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {results.map((anime) => (
-                    <AnimeCard key={anime.mal_id} anime={anime} />
+                    <AnimeCard
+                      key={anime.mal_id}
+                      anime={anime}
+                      onAdd={handleAddAnime}
+                      onRemove={handleRemoveAnime}
+                      isAdding={addingAnimeId === anime.mal_id}
+                      isRemoving={removingAnimeId === anime.mal_id}
+                      isAdded={addedMalIds.has(anime.mal_id)}
+                    />
                   ))}
                 </div>
                 {isFetchingMore && <Loader />}
@@ -465,7 +724,15 @@ export default function SearchAnimes() {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {seasonPopular.map((anime) => (
-                    <AnimeCard key={`popular-${anime.mal_id}`} anime={anime} />
+                    <AnimeCard
+                      key={`popular-${anime.mal_id}`}
+                      anime={anime}
+                      onAdd={handleAddAnime}
+                      onRemove={handleRemoveAnime}
+                      isAdding={addingAnimeId === anime.mal_id}
+                      isRemoving={removingAnimeId === anime.mal_id}
+                      isAdded={addedMalIds.has(anime.mal_id)}
+                    />
                   ))}
                 </div>
               )}
@@ -487,7 +754,15 @@ export default function SearchAnimes() {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {seasonUpcoming.map((anime) => (
-                    <AnimeCard key={`upcoming-${anime.mal_id}`} anime={anime} />
+                    <AnimeCard
+                      key={`upcoming-${anime.mal_id}`}
+                      anime={anime}
+                      onAdd={handleAddAnime}
+                      onRemove={handleRemoveAnime}
+                      isAdding={addingAnimeId === anime.mal_id}
+                      isRemoving={removingAnimeId === anime.mal_id}
+                      isAdded={addedMalIds.has(anime.mal_id)}
+                    />
                   ))}
                 </div>
               )}

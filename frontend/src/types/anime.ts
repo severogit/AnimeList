@@ -1,4 +1,9 @@
-export const statuses = ["Assistindo", "Concluído", "Dropado", "Planejo ver"] as const;
+export const statuses = [
+  "Assistindo",
+  "Finalizado",
+  "Dropado",
+  "Planejo ver",
+] as const;
 export type Status = (typeof statuses)[number];
 
 export interface Anime {
@@ -10,6 +15,7 @@ export interface Anime {
   url: string;
   score?: number;
   notes?: string;
+  year?: number;
 }
 
 export interface JikanAnime {

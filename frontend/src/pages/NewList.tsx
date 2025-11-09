@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, Fragment } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import type { Anime, Status } from "../types/anime";
 import { statuses } from "../types/anime";
@@ -15,12 +15,24 @@ import {
   PencilSquareIcon,
 } from "@heroicons/react/20/solid";
 
+const finalStatus = (
+  statuses.find((status) => status === "Finalizado") ?? statuses[1]
+) as Status;
+
 const statusColors: Record<Status, string> = {
   Assistindo: "bg-status-watching",
-  Concluído: "bg-status-completed",
   Dropado: "bg-status-dropped",
   "Planejo ver": "bg-status-plan",
+  [finalStatus]: "bg-status-completed",
 };
+
+function Loader() {
+  return (
+    <div className="flex items-center justify-center py-10">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
+    </div>
+  );
+}
 
 type StatusFilter = "Todos" | Status;
 
@@ -30,7 +42,8 @@ export default function MyListView() {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [filter, setFilter] = useState<StatusFilter>("Todos");
+  const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("Todos");
+  const [selectedYear, setSelectedYear] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
@@ -41,6 +54,7 @@ export default function MyListView() {
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   useEffect(() => {
     if (!token) {
       window.location.href = "/";
@@ -64,6 +78,16 @@ export default function MyListView() {
     fetchAnimes();
   }, []);
 
+  const years = useMemo(() => {
+    const yearSet = new Set<string>();
+    animes.forEach((anime) => {
+      if (typeof anime.year === "number") {
+        yearSet.add(String(anime.year));
+      }
+    });
+    return Array.from(yearSet).sort((a, b) => Number(b) - Number(a));
+  }, [animes]);
+
   const handleDeleteAnime = async (animeId: string) => {
     if (!animeId) return;
     const shouldDelete = confirm("Deseja remover este anime da lista?");
@@ -82,12 +106,18 @@ export default function MyListView() {
 
   const normalizedQuery = searchTerm.trim().toLowerCase();
   const filtered = animes.filter((anime) => {
-    const matchesStatus = filter === "Todos" || anime.status === filter;
+    const matchesStatus =
+      selectedStatus === "Todos" || anime.status === selectedStatus;
+    const matchesYear =
+      selectedYear === "" ||
+      (typeof anime.year === "number" && String(anime.year) === selectedYear);
     const matchesQuery =
       normalizedQuery === "" ||
       anime.title.toLowerCase().includes(normalizedQuery);
-    return matchesStatus && matchesQuery;
+
+    return matchesStatus && matchesYear && matchesQuery;
   });
+
   const sortedAnimes = [...filtered].sort((a, b) => {
     const scoreA = a.score ?? Number.NEGATIVE_INFINITY;
     const scoreB = b.score ?? Number.NEGATIVE_INFINITY;
@@ -99,153 +129,233 @@ export default function MyListView() {
     return a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" });
   });
 
-  return (
-    <div className="flex min-h-screen bg-surface-muted text-fg">
-      <aside className="w-64 bg-surface-base p-6 border-r border-gray-700 hidden md:block">
-        <h2 className="text-xl font-bold mb-4">Filtros</h2>
-        <ul className="space-y-2">
-          {statusOptions.map((option) => (
-            <li
-              key={option}
-              onClick={() => setFilter(option)}
-              className={`cursor-pointer rounded-md px-3 py-2 transition ${
-                filter === option
-                  ? "bg-brand-hover-primary text-fg font-semibold"
-                  : "text-gray-300 hover:text-fg hover:bg-surface-card/10"
-              }`}
-            >
-              {option}
-            </li>
-          ))}
-        </ul>
-      </aside>
+  const trimmedSearch = searchTerm.trim();
+  const hasActiveFilters =
+    trimmedSearch !== "" ||
+    selectedStatus !== "Todos" ||
+    selectedYear !== "";
 
-      <main className="flex-1 w-full p-4 sm:p-6 max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold">Minha Lista</h1>
-          <div className="hidden md:flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded-lg bg-surface-card/10 px-3 py-2 w-72">
-              <MagnifyingGlassIcon className="w-5 h-5 text-fg/70" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Filtrar por título"
-                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-muted focus:outline-none"
-              />
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedStatus("Todos");
+    setSelectedYear("");
+  };
+
+  const totalAnimes = animes.length;
+  const hasResults = sortedAnimes.length > 0;
+
+  return (
+    <div className="min-h-screen bg-surface-base text-fg px-4 py-6 sm:px-6 lg:px-10">
+      <div className="max-w-6xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Minha lista</h1>
+          <p className="text-fg-muted">
+            Revise, filtre e organize os animes que fazem parte da sua coleção.
+          </p>
+        </header>
+
+        <section className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase text-fg-muted">
+                Buscar
+              </span>
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-3 -translate-y-1/2 h-5 w-5 text-fg-muted" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Nome do anime"
+                  className="w-full rounded-xl bg-surface-muted border border-surface-muted/70 focus:border-brand-primary focus:ring-0 py-3 pl-11 pr-4 text-sm text-fg placeholder:text-fg-muted"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase text-fg-muted">
+                Status
+              </span>
+              <select
+                value={selectedStatus}
+                onChange={(event) =>
+                  setSelectedStatus(event.target.value as StatusFilter)
+                }
+                className="rounded-xl bg-surface-muted border border-surface-muted/70 focus:border-brand-primary focus:ring-0 py-3 px-3 text-sm text-fg"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase text-fg-muted">
+                Ano
+              </span>
+              <select
+                value={selectedYear}
+                onChange={(event) => setSelectedYear(event.target.value)}
+                className="rounded-xl bg-surface-muted border border-surface-muted/70 focus:border-brand-primary focus:ring-0 py-3 px-3 text-sm text-fg"
+              >
+                <option value="">Qualquer ano</option>
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
 
-        <div className="md:hidden mb-6">
-          <div className="rounded-2xl bg-surface-card/10 p-4 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2 rounded-lg bg-surface-card/20 px-3 py-2">
-              <MagnifyingGlassIcon className="w-5 h-5 text-fg/70" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Filtrar por título"
-                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-muted focus:outline-none"
-              />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-fg-muted mb-2">
-                Status
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {statusOptions.map((option) => (
+          {hasActiveFilters && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {trimmedSearch !== "" && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-sm text-surface-card">
+                  {trimmedSearch}
                   <button
-                    key={option}
                     type="button"
-                    onClick={() => setFilter(option)}
-                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition ${
-                      filter === option
-                        ? "border-brand-primary bg-brand-primary text-fg"
-                        : "border-transparent bg-surface-card text-fg-muted hover:text-fg"
-                    }`}
+                    className="text-surface-card/80 hover:text-white"
+                    onClick={() => setSearchTerm("")}
                   >
-                    {option}
+                    x
                   </button>
+                </span>
+              )}
+
+              {selectedStatus !== "Todos" && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-sm text-surface-card">
+                  {selectedStatus}
+                  <button
+                    type="button"
+                    className="text-surface-card/80 hover:text-white"
+                    onClick={() => setSelectedStatus("Todos")}
+                  >
+                    x
+                  </button>
+                </span>
+              )}
+
+              {selectedYear !== "" && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-brand-secondary px-3 py-1 text-sm text-surface-card">
+                  {selectedYear}
+                  <button
+                    type="button"
+                    className="text-surface-card/80 hover:text-white"
+                    onClick={() => setSelectedYear("")}
+                  >
+                    x
+                  </button>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="ml-auto text-sm font-semibold text-brand-secondary hover:text-brand-hover-secondary"
+              >
+                Limpar tudo
+              </button>
+            </div>
+          )}
+        </section>
+
+        <section>
+          <header className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold">Animes da sua lista</h2>
+              <p className="text-sm text-fg-muted">
+                {sortedAnimes.length}{" "}
+                {sortedAnimes.length === 1 ? "anime" : "animes"} exibidos de{" "}
+                {totalAnimes}
+              </p>
+            </div>
+          </header>
+
+          {loading ? (
+            <Loader />
+          ) : totalAnimes === 0 ? (
+            <p className="text-fg-muted">
+              Você ainda não adicionou nenhum anime na sua lista.
+            </p>
+          ) : !hasResults ? (
+            <p className="text-fg-muted">
+              Nenhum anime encontrado com os filtros selecionados.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="hidden md:flex items-center justify-between font-semibold border-b border-gray-600 py-2 mb-3 px-2">
+                <div className="flex items-center min-w-0">
+                  <span className="text-left">Título</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 pr-2 w-full md:w-auto justify-between md:justify-end">
+                  <span className="text-center w-16">Score</span>
+                  <span className="text-center w-28">Status</span>
+                  <span className="text-center w-20">Editar</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {sortedAnimes.map((anime) => (
+                  <div
+                    key={anime._id}
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-surface-card/5 hover:bg-surface-card/10 rounded-lg px-3 py-2 transition-colors min-h-[56px]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img
+                        src={anime.imageUrl}
+                        alt={anime.title}
+                        className="w-10 h-14 object-cover rounded-md flex-shrink-0"
+                      />
+                      <span className="text-base font-medium truncate">
+                        {anime.title}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 pr-2 w-full md:w-auto justify-between md:justify-end">
+                      <div className="text-lg font-semibold text-yellow-400 md:w-16 text-center md:text-center">
+                        {typeof anime.score === "number" ? anime.score : 0}
+                      </div>
+                      <div className="flex md:w-28 md:justify-center">
+                        <span
+                          className={`text-sm font-semibold px-3 py-1 rounded-md ${
+                            statusColors[anime.status]
+                          } text-white`}
+                        >
+                          {anime.status}
+                        </span>
+                      </div>
+                      <div className="flex md:w-20 md:justify-center">
+                        <button
+                          aria-label="Editar"
+                          title="Editar"
+                          className="p-2 rounded-md bg-brand-secondary hover:bg-brand-hover-secondary text-fg"
+                          onClick={() => {
+                            setEditingAnime(anime);
+                            setEditStatus(anime.status);
+                            setEditScore(
+                              typeof anime.score === "number" ? anime.score : 0
+                            );
+                            setEditNotes(
+                              typeof anime.notes === "string"
+                                ? anime.notes!
+                                : ""
+                            );
+                            setEditOpen(true);
+                          }}
+                        >
+                          <PencilSquareIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <p>Carregando...</p>
-        ) : animes.length === 0 ? (
-          <p>Você ainda nao adicionou nenhum anime na sua lista.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <div className="hidden md:flex items-center justify-between font-semibold border-b border-gray-600 py-2 mb-3 px-2">
-              <div className="flex items-center min-w-0">
-                <span className="text-left">Título</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 md:gap-4 pr-2 w-full md:w-auto justify-between md:justify-end">
-                <span className="text-center w-16">Score</span>
-                <span className="text-center w-28">Status</span>
-                <span className="text-center w-20">Editar</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {sortedAnimes.map((anime) => (
-                <div
-                  key={anime._id}
-                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-surface-card/5 hover:bg-surface-card/10 rounded-lg px-3 py-2 transition-colors min-h-[56px]"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={anime.imageUrl}
-                      alt={anime.title}
-                      className="w-10 h-14 object-cover rounded-md flex-shrink-0"
-                    />
-                    <span className="text-base font-medium truncate">
-                      {anime.title}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 md:gap-4 pr-2 w-full md:w-auto justify-between md:justify-end">
-                    <div className="text-lg font-semibold text-yellow-400 md:w-16 text-center md:text-center">
-                      {typeof anime.score === "number" ? anime.score : 0}
-                    </div>
-                    <div className="flex md:w-28 md:justify-center">
-                      <span
-                        className={`text-sm font-semibold px-3 py-1 rounded-md ${
-                          statusColors[anime.status]
-                        } text-white`}
-                      >
-                        {anime.status}
-                      </span>
-                    </div>
-                    <div className="flex md:w-20 md:justify-center">
-                      <button
-                        aria-label="Editar"
-                        title="Editar"
-                        className="p-2 rounded-md bg-brand-secondary hover:bg-brand-hover-secondary text-fg"
-                        onClick={() => {
-                          setEditingAnime(anime);
-                          setEditStatus(anime.status);
-                          setEditScore(
-                            typeof anime.score === "number" ? anime.score : 0
-                          );
-                          setEditNotes(
-                            typeof anime.notes === "string" ? anime.notes! : ""
-                          );
-                          setEditOpen(true);
-                        }}
-                      >
-                        <PencilSquareIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </section>
 
         <Transition show={editOpen} as={Fragment}>
           <Dialog
@@ -403,10 +513,7 @@ export default function MyListView() {
             </div>
           </Dialog>
         </Transition>
-      </main>
+      </div>
     </div>
   );
 }
-
-
-
