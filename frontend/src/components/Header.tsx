@@ -11,7 +11,7 @@ import {
 } from "@heroicons/react/20/solid";
 
 export default function Header() {
-  const { isLogged, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -61,7 +61,7 @@ export default function Header() {
           <MagnifyingGlassIcon className="w-4 h-4 lg:w-5 lg:h-5" />
         </Link>
 
-        {isLogged && (
+        {isAuthenticated && (
           <>
             <Link
               to="/newlist"
@@ -81,7 +81,7 @@ export default function Header() {
           </>
         )}
 
-        {!isLogged && (
+        {!isAuthenticated && (
           <>
             <Link
               to="/login"

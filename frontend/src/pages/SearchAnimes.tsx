@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -7,12 +8,43 @@ import {
 } from "@heroicons/react/20/solid";
 import type { JikanAnime, JikanGenre } from "../types/anime";
 import api from "../services/api";
+import { getApiErrorMessage } from "../utils/errors";
 
 interface JikanResponse<T> {
   data: T;
   pagination?: {
     has_next_page?: boolean;
   };
+}
+
+interface RawJikanAnime {
+  mal_id: number;
+  title: string;
+  images?: {
+    jpg?: {
+      image_url?: string;
+      large_image_url?: string;
+    };
+    webp?: {
+      image_url?: string;
+      large_image_url?: string;
+    };
+  };
+  url: string;
+  score?: number;
+  synopsis?: string;
+  type?: string;
+  status?: string;
+  year?: number;
+  aired?: {
+    prop?: {
+      from?: {
+        year?: number;
+      };
+    };
+  };
+  season_year?: number;
+  episodes?: number;
 }
 
 const STATIC_GENRES: JikanGenre[] = [
@@ -33,7 +65,7 @@ const STATIC_GENRES: JikanGenre[] = [
   { mal_id: 15, name: "Isekai" },
 ];
 
-const mapJikanAnime = (raw: any): JikanAnime => ({
+const mapJikanAnime = (raw: RawJikanAnime): JikanAnime => ({
   mal_id: raw.mal_id,
   title: raw.title,
   images: {
@@ -155,6 +187,7 @@ function Loader() {
 }
 
 export default function SearchAnimes() {
+  const { isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedGenre, setSelectedGenre] = useState<string>("");
@@ -187,6 +220,13 @@ export default function SearchAnimes() {
   } | null>(null);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      searchAbortRef.current?.abort();
+    };
+  }, []);
 
   const currentYear = new Date().getFullYear();
   const years = useMemo(() => {
@@ -207,16 +247,17 @@ export default function SearchAnimes() {
   }, [searchTerm]);
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
+    if (!isAuthenticated) {
+      setUserAnimes(new Map<number, string>());
       setAddedMalIds(new Set<number>());
       return;
     }
 
+    let cancelled = false;
+
     const fetchUserAnimes = async () => {
       try {
-        const response = await api.get("/animes");
+        const response = await api.get("/animes", { params: { limit: 0 } });
         const list = Array.isArray(response.data?.animes)
           ? (response.data.animes as Array<{
               _id?: string;
@@ -226,22 +267,31 @@ export default function SearchAnimes() {
 
         const map = new Map<number, string>();
         for (const anime of list) {
-          if (typeof anime?.malId === "number" && typeof anime?._id === "string") {
+          if (
+            typeof anime?.malId === "number" &&
+            typeof anime?._id === "string"
+          ) {
             map.set(anime.malId, anime._id);
           }
         }
 
-        setUserAnimes(map);
-        setAddedMalIds(
-          new Set<number>(Array.from(map.keys()))
-        );
+        if (!cancelled) {
+          setUserAnimes(map);
+          setAddedMalIds(new Set<number>(Array.from(map.keys())));
+        }
       } catch (error) {
-        console.warn("Nao foi possivel carregar a lista do usuario.", error);
+        if (!cancelled) {
+          console.warn("Nao foi possivel carregar a lista do usuario.", error);
+        }
       }
     };
 
     fetchUserAnimes();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!feedback) {
@@ -261,9 +311,14 @@ export default function SearchAnimes() {
         return;
       }
 
+      searchAbortRef.current?.abort();
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+
       setSearchError(null);
       if (pageToLoad === 1 && replace) {
         setIsInitialLoading(true);
+        setIsFetchingMore(false);
       } else {
         setIsFetchingMore(true);
       }
@@ -291,9 +346,10 @@ export default function SearchAnimes() {
         }
 
         const response = await fetch(
-          `https://api.jikan.moe/v4/anime?${params.toString()}`
+          `https://api.jikan.moe/v4/anime?${params.toString()}`,
+          { signal: controller.signal }
         );
-        const json = (await response.json()) as JikanResponse<any[]> & {
+        const json = (await response.json()) as JikanResponse<RawJikanAnime[]> & {
           pagination: { has_next_page?: boolean };
         };
 
@@ -301,6 +357,10 @@ export default function SearchAnimes() {
           throw new Error(
             json?.data ? "Erro na busca de animes" : response.statusText
           );
+        }
+
+        if (controller.signal.aborted) {
+          return;
         }
 
         const mapped = (json.data ?? []).map(mapJikanAnime);
@@ -311,14 +371,20 @@ export default function SearchAnimes() {
         setHasMore(Boolean(json.pagination?.has_next_page));
         setCurrentPage(pageToLoad);
       } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
         setSearchError(
           error instanceof Error
             ? error.message
             : "Ocorreu um erro ao buscar animes."
         );
       } finally {
-        setIsInitialLoading(false);
-        setIsFetchingMore(false);
+        if (searchAbortRef.current === controller) {
+          setIsInitialLoading(false);
+          setIsFetchingMore(false);
+          searchAbortRef.current = null;
+        }
       }
     },
     [filtersActive, debouncedSearch, selectedGenre, selectedYear]
@@ -348,9 +414,7 @@ export default function SearchAnimes() {
         return;
       }
 
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
+      if (!isAuthenticated) {
         setFeedback({
           type: "error",
           message: "Faca login para adicionar animes a sua lista.",
@@ -395,19 +459,30 @@ export default function SearchAnimes() {
           message: `"${anime.title}" adicionado a sua lista.`,
         });
       } catch (error) {
-        const message =
-          (error as any)?.response?.data?.msg ??
-          "Nao foi possivel adicionar o anime. Tente novamente.";
-        setFeedback({ type: "error", message });
+        setFeedback({
+          type: "error",
+          message: getApiErrorMessage(
+            error,
+            "Nao foi possivel adicionar o anime. Tente novamente."
+          ),
+        });
       } finally {
         setAddingAnimeId(null);
       }
     },
-    [addedMalIds]
+    [addedMalIds, isAuthenticated]
   );
 
   const handleRemoveAnime = useCallback(
     async (anime: JikanAnime) => {
+      if (!isAuthenticated) {
+        setFeedback({
+          type: "error",
+          message: "Faca login para gerenciar sua lista.",
+        });
+        return;
+      }
+
       const animeId = userAnimes.get(anime.mal_id);
       if (!animeId) {
         setFeedback({
@@ -439,15 +514,18 @@ export default function SearchAnimes() {
           message: `"${anime.title}" removido da sua lista.`,
         });
       } catch (error) {
-        const message =
-          (error as any)?.response?.data?.msg ??
-          "Nao foi possivel remover o anime. Tente novamente.";
-        setFeedback({ type: "error", message });
+        setFeedback({
+          type: "error",
+          message: getApiErrorMessage(
+            error,
+            "Nao foi possivel remover o anime. Tente novamente."
+          ),
+        });
       } finally {
         setRemovingAnimeId(null);
       }
     },
-    [userAnimes]
+    [userAnimes, isAuthenticated]
   );
 
   const sentinelRef = useCallback(
@@ -470,6 +548,13 @@ export default function SearchAnimes() {
 
   useEffect(() => {
     if (!filtersActive) {
+      if (searchAbortRef.current) {
+        searchAbortRef.current.abort();
+        searchAbortRef.current = null;
+      }
+      setIsInitialLoading(false);
+      setIsFetchingMore(false);
+      setSearchError(null);
       setResults([]);
       setHasMore(false);
       setCurrentPage(1);
@@ -517,8 +602,12 @@ export default function SearchAnimes() {
           );
         }
 
-        const popularJson = (await popularRes.json()) as JikanResponse<any[]>;
-        const upcomingJson = (await upcomingRes.json()) as JikanResponse<any[]>;
+        const popularJson = (await popularRes.json()) as JikanResponse<
+          RawJikanAnime[]
+        >;
+        const upcomingJson = (await upcomingRes.json()) as JikanResponse<
+          RawJikanAnime[]
+        >;
 
         const popularList = (popularJson.data ?? []).map(mapJikanAnime);
         const upcomingList = (upcomingJson.data ?? []).map(mapJikanAnime);
@@ -545,6 +634,16 @@ export default function SearchAnimes() {
     setSelectedGenre("");
     setSelectedYear("");
     setDebouncedSearch("");
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+      searchAbortRef.current = null;
+    }
+    setResults([]);
+    setHasMore(false);
+    setCurrentPage(1);
+    setIsInitialLoading(false);
+    setIsFetchingMore(false);
+    setSearchError(null);
   };
 
   return (
@@ -773,3 +872,4 @@ export default function SearchAnimes() {
     </div>
   );
 }
+

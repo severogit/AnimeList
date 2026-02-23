@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import type { Anime, Status } from "../types/anime";
 import { statuses } from "../types/anime";
@@ -14,6 +15,7 @@ import {
   MagnifyingGlassIcon,
   PencilSquareIcon,
 } from "@heroicons/react/20/solid";
+import { useAuth } from "../context/AuthContext";
 
 const finalStatus = (
   statuses.find((status) => status === "Finalizado") ?? statuses[1]
@@ -39,6 +41,8 @@ type StatusFilter = "Todos" | Status;
 const statusOptions: StatusFilter[] = ["Todos", ...statuses];
 
 export default function MyListView() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -52,31 +56,27 @@ export default function MyListView() {
   const [editScore, setEditScore] = useState<number>(0);
   const [editNotes, setEditNotes] = useState<string>("");
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-  useEffect(() => {
-    if (!token) {
-      window.location.href = "/";
-    }
-  }, [token]);
-
-  const fetchAnimes = async () => {
+  const fetchAnimes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get("/animes");
-      setAnimes(res.data.animes);
+      const res = await api.get("/animes", { params: { limit: 0 } });
+      setAnimes(Array.isArray(res.data?.animes) ? res.data.animes : []);
     } catch (err) {
       console.error(err);
       alert("Erro ao carregar animes");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setAnimes([]);
+      navigate("/login", { replace: true });
+      return;
+    }
     fetchAnimes();
-  }, []);
+  }, [isAuthenticated, fetchAnimes, navigate]);
 
   const years = useMemo(() => {
     const yearSet = new Set<string>();

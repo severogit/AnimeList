@@ -19,7 +19,7 @@ interface Anime {
 }
 
 export default function Home() {
-  const { isLogged } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [topAnimes, setTopAnimes] = useState<Anime[]>([]);
 
   useEffect(() => {
@@ -51,10 +51,10 @@ export default function Home() {
           </p>
 
           <Link
-            to={isLogged ? "/mylist" : "/login"}
+            to={isAuthenticated ? "/newlist" : "/login"}
             className="bg-surface-card text-fg-inverse px-6 py-2.5 rounded-full font-semibold tracking-tight w-max hover:bg-fg-muted transition-all"
           >
-            {isLogged ? "Minha Lista" : "Comece Já"}
+            {isAuthenticated ? "Minha Lista" : "Comece Já"}
           </Link>
         </section>
 
@@ -102,9 +102,10 @@ export default function Home() {
       </main>
 
       <footer className="w-full p-4 text-center text-white bg-surface-footer rounded-t">
-        &copy; {new Date().getFullYear()} AnimeList. Todos os direitos
-        reservados.
+        &copy; {new Date().getFullYear()} AnimeList.
       </footer>
     </div>
   );
 }
+
+

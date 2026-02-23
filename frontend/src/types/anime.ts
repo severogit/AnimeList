@@ -22,8 +22,13 @@ export interface JikanAnime {
   mal_id: number;
   title: string;
   images: {
-    jpg: {
-      image_url: string;
+    jpg?: {
+      image_url?: string;
+      large_image_url?: string;
+    };
+    webp?: {
+      image_url?: string;
+      large_image_url?: string;
     };
   };
   url: string;
@@ -33,6 +38,14 @@ export interface JikanAnime {
   status?: string;
   year?: number;
   episodes?: number;
+  aired?: {
+    prop?: {
+      from?: {
+        year?: number;
+      };
+    };
+  };
+  season_year?: number;
 }
 
 export interface JikanGenre {
