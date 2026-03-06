@@ -13,6 +13,13 @@ import { getApiErrorMessage } from "../utils/errors";
 interface JikanResponse<T> {
   data: T;
   pagination?: {
+    items?: {
+      count?: number;
+      total?: number;
+      per_page?: number;
+    };
+    current_page?: number;
+    last_visible_page?: number;
     has_next_page?: boolean;
   };
 }
@@ -203,6 +210,7 @@ export default function SearchAnimes() {
   const [results, setResults] = useState<JikanAnime[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalResults, setTotalResults] = useState<number | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -317,6 +325,7 @@ export default function SearchAnimes() {
 
       setSearchError(null);
       if (pageToLoad === 1 && replace) {
+        setTotalResults(null);
         setIsInitialLoading(true);
         setIsFetchingMore(false);
       } else {
@@ -368,6 +377,12 @@ export default function SearchAnimes() {
         setResults((prev) =>
           replace || pageToLoad === 1 ? mapped : [...prev, ...mapped]
         );
+        const apiTotal = json.pagination?.items?.total;
+        if (typeof apiTotal === "number") {
+          setTotalResults(apiTotal);
+        } else if (pageToLoad === 1) {
+          setTotalResults(mapped.length);
+        }
         setHasMore(Boolean(json.pagination?.has_next_page));
         setCurrentPage(pageToLoad);
       } catch (error) {
@@ -558,6 +573,7 @@ export default function SearchAnimes() {
       setResults([]);
       setHasMore(false);
       setCurrentPage(1);
+      setTotalResults(null);
       return;
     }
 
@@ -768,7 +784,8 @@ export default function SearchAnimes() {
               <div>
                 <h2 className="text-xl font-semibold">Resultados da busca</h2>
                 <p className="text-sm text-fg-muted">
-                  {results.length} animes encontrados
+                  Mostrando {results.length} de{" "}
+                  {totalResults ?? results.length} animes
                 </p>
               </div>
             </header>

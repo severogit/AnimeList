@@ -1,19 +1,27 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes";
 import animeRoutes from "./routes/animeRoutes";
 
-dotenv.config();
-
 const app = express();
 
-// Middlewares
-app.use(cors());
+const allowedOrigins =
+  process.env.FRONTEND_ORIGIN?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) || ["http://localhost:5173", "http://localhost:3000"];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 app.use(express.json());
 
-// Rotas básicas (temporárias)
 app.get("/", (_req, res) => {
   res.send("API do MyAnimeList Clone está rodando! 🚀");
 });

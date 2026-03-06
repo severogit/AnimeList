@@ -11,6 +11,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import Typeahead from "../components/Typeahead";
 import type { Anime, Status } from "../types/anime";
 import { statuses } from "../types/anime";
+import { useAuth } from "../context/AuthContext";
 
 const finalStatus = (
   statuses.find((status) => status === "Finalizado") ?? statuses[1]
@@ -24,19 +25,12 @@ const statusColors: Record<Status, string> = {
 };
 
 export default function MyList() {
+  const { isAuthenticated } = useAuth();
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  useEffect(() => {
-    if (!token) {
-      window.location.href = "/";
-    }
-  }, [token]);
 
   const fetchAnimes = async (page = 1) => {
     setLoading(true);
@@ -54,8 +48,10 @@ export default function MyList() {
   };
 
   useEffect(() => {
-    fetchAnimes();
-  }, []);
+    if (isAuthenticated) {
+      fetchAnimes();
+    }
+  }, [isAuthenticated]);
 
   const handleAdd = async () => {
     if (!selectedAnime) return alert("Selecione um anime!");

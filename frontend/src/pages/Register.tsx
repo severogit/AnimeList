@@ -26,7 +26,7 @@ export default function Register() {
         email: email.trim(),
         password,
       });
-      login({ token: response.data.token, user: response.data.user });
+      login({ token: response.data.accessToken, user: response.data.user });
       navigate("/newlist");
     } catch (err) {
       setError(getApiErrorMessage(err, "Erro ao cadastrar"));
@@ -83,7 +83,7 @@ export default function Register() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            minLength={6}
+            minLength={8}
             className="w-full p-3 border border-fg-muted rounded focus:outline-none focus:ring-2 focus:ring-brand-hover-primary bg-transparent"
             required
           />

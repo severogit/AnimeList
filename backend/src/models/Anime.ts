@@ -1,8 +1,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IAnime extends Document {
-  userId: string; // ID do usuario dono da lista
-  malId: number; // ID do anime na Jikan API
+  userId: string;
+  malId: number;
   title: string;
   imageUrl: string;
   status: "Planejo ver" | "Assistindo" | "Finalizado" | "Dropado";

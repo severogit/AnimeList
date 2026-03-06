@@ -9,7 +9,10 @@ import NewList from "./pages/NewList";
 import SearchAnimes from "./pages/SearchAnimes";
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-fg">Carregando sessão...</div>;
+  }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -25,8 +28,22 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/newlist" element={<NewList />}></Route>
-          <Route path="/search" element={<SearchAnimes />}></Route>
+          <Route
+            path="/newlist"
+            element={
+              <PrivateRoute>
+                <NewList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <PrivateRoute>
+                <SearchAnimes />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/mylist"
             element={

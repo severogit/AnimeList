@@ -24,7 +24,7 @@ export default function Login() {
         email: email.trim(),
         password,
       });
-      login({ token: response.data.token, user: response.data.user });
+      login({ token: response.data.accessToken, user: response.data.user });
       navigate("/newlist");
     } catch (err) {
       setError(getApiErrorMessage(err, "Erro ao logar"));

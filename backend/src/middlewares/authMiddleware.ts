@@ -1,8 +1,13 @@
+import "dotenv/config";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+
+if (!JWT_ACCESS_SECRET) {
+  throw new Error("⚠️ Configure JWT_ACCESS_SECRET no ambiente.");
+}
 
 interface JwtPayload {
   id: string;
@@ -19,12 +24,10 @@ export default async function authMiddleware(req: Request, res: Response, next: 
     const token = authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ msg: "Token inválido" });
 
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    // opcional: trazer usuário do DB (sem senha)
+    const payload = jwt.verify(token, JWT_ACCESS_SECRET) as JwtPayload;
     const user = await User.findById(payload.id).select("-password");
     if (!user) return res.status(401).json({ msg: "Usuário não encontrado" });
 
-    // anexar user à req para uso nas rotas protegidas
     (req as any).user = user;
     next();
   } catch (err) {

@@ -18,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
   user: AuthUser | null;
+  isLoading: boolean;
   login: (session: { token: string; user?: AuthUser | null }) => void;
   logout: () => void;
 }
@@ -29,6 +30,15 @@ interface AuthState {
 
 const TOKEN_STORAGE_KEY = "token";
 const USER_STORAGE_KEY = "auth:user";
+
+const persistSession = (token: string, user?: AuthUser | null) => {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  if (user) {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+};
 
 const readStoredSession = (): AuthState => {
   if (typeof window === "undefined") {
@@ -50,6 +60,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(() => readStoredSession());
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -68,12 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     ({ token, user }: { token: string; user?: AuthUser | null }) => {
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
-      if (user) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(USER_STORAGE_KEY);
-      }
+      persistSession(token, user ?? undefined);
+      import("../services/api").then(({ default: api }) => {
+        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      });
       setState({ token, user: user ?? null });
     },
     []
@@ -82,8 +91,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     localStorage.removeItem(USER_STORAGE_KEY);
+    import("../services/api").then(({ default: api }) => {
+      delete api.defaults.headers.common.Authorization;
+      api.post("/auth/logout").catch(() => undefined);
+    });
     setState({ token: null, user: null });
   }, []);
+
+  useEffect(() => {
+    import("../services/api").then(({ onUnauthorized, default: api }) => {
+      onUnauthorized(logout);
+
+      (async () => {
+        const { user: storedUser } = readStoredSession();
+        try {
+          const res = await api.post("/auth/refresh");
+          const freshToken: string | undefined = res.data?.accessToken;
+          const freshUser: AuthUser | null = res.data?.user ?? storedUser;
+          if (freshToken) {
+            api.defaults.headers.common.Authorization = `Bearer ${freshToken}`;
+            persistSession(freshToken, freshUser ?? storedUser);
+            setState({ token: freshToken, user: freshUser ?? null });
+          } else {
+            logout();
+          }
+        } catch {
+          logout();
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    });
+  }, [logout]);
 
   const { token, user } = state;
 
@@ -92,10 +131,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: Boolean(token),
       token,
       user,
+      isLoading,
       login,
       logout,
     }),
-    [token, user, login, logout]
+    [token, user, isLoading, login, logout]
   );
 
   return (
